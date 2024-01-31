@@ -102,13 +102,18 @@ async function gencalldata(wasmname,input,zkeyname,vkname){
 
 }
 
-// gencalldata("../circom/crcuit/crcuit.wasm",{a:2,b:4},"../circom/crcuit/crcuit.zkey","../circom/crcuit/crcuit_vk.json",[8]).then((res)=>{
-//     console.log(res)
-//     process.exit()
-// })
-genproof("../circom/crcuit/crcuit.wasm",{a:2,b:4},"../circom/crcuit/crcuit.zkey","../circom/crcuit/crcuit_vk.json",[8]).then(()=>{
+gencalldata("../circom/crcuit/crcuit.wasm",{a:2,b:4},"../circom/crcuit/crcuit.zkey","../circom/crcuit/crcuit_vk.json",[8]).then((res)=>{
+    console.log(res)
+
+})
+
+gencalldata("../circom/crcuit/crcuit.wasm",{a:2,b:6},"../circom/crcuit/crcuit.zkey","../circom/crcuit/crcuit_vk.json",[12]).then((res)=>{
+    console.log(res)
     process.exit()
 })
+// genproof("../circom/crcuit/crcuit.wasm",{a:2,b:4},"../circom/crcuit/crcuit.zkey","../circom/crcuit/crcuit_vk.json",[8]).then(()=>{
+//     process.exit()
+// })
 
 
 // Setup(path.join(__dirname,"../circom/crcuit.circom")).then(()=>{

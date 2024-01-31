@@ -12,6 +12,7 @@
   "dependencies": {
     "bfj": "^7.0.2",
     "circom": "^0.5.46",
+    "circomlib": "^2.0.5",
     "crypto": "^1.0.1",
     "ffjavascript": "^0.2.57",
     "logplease": "^1.2.15",

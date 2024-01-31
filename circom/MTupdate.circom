@@ -1,47 +1,55 @@
-// 导入 circom 标准库
-include "circomlib/circomlib.circom";
+pragma circom 2.0.5;
 
-// 定义电路输入
-template MerkleTreeUpdate() {
-  signal leaf: 2;
-  signal oldRoot: 256;
-  signal newData: 2;
-  signal newRoot: 256;
+include "../circomlib/circuits/sha256/sha256_2.circom";
+
+template verifyMerklePath(k){
+
+	// public input
+	signal input root; // Merkle root
+	signal input leaf; // 叶子节点 哈希值
+
+	// private input
+	signal input path[k]; // merkle path
+    signal input path_bits[k]; // merkle path index
+
+    component computed_root = getMerkleRoot(k);
+    computed_root.leaf <== leaf;
+
+    for (var w = 0; w < k; w++){
+        computed_root.path[w] <== path[w];
+        computed_root.path_bits[w] <== path_bits[w];
+    }
+    root === computed_root.out;
+
+
 }
 
-// 定义电路逻辑
-component main(MerkleTreeUpdate) -> (output newRoot) {
-  // 定义默克尔树的hash函数
-  component hashFunc(left, right) -> (output hash) = sha256;
+template getMerkleRoot(k){    // k 是Merkle tree 的深度
 
-  // 计算新叶子节点的哈希
-  component newLeafHash() -> (output hash) {
-    return hashFunc(newData, 0);
-  }
+    signal input leaf; // 叶子节点 哈希值
+    signal input path[k]; // Merkle path
+    signal input path_bits[k]; // Merkle 路径索引
 
-  // 计算新根哈希
-  component computeNewRoot(left, right) -> (output newRoot) {
-    return hashFunc(left, right);
-  }
+    signal output out;
 
-  // 计算默克尔树路径上的哈希值
-  component merklePath(left, right, position, leaf) -> (output pathHash) {
-    // 如果 position 的二进制表示的最高位是 0，则取 left，否则取 right
-    pathHash = (position[255] == 0) ? left : right;
+    // 对Merkle path中前两个元素进行hash运算
+    component merkle_root[k];
+    merkle_root[0] = SHA256_2();
+    merkle_root[0].a <== leaf + path_bits[0]* (path[0] - leaf);
+    merkle_root[0].b <== path[0] + path_bits[0]* (leaf - path[0]);
 
-    // 从左到右遍历 position 的其余位
-    for (var i = 254; i >= 0; i--) {
-      // 如果当前位是 1，则取 right，否则取 left
-      pathHash = (position[i] == 1) ? hashFunc(left, pathHash) : hashFunc(pathHash, right);
+    // 对Merkle path中剩下的元素进行hash运算
+    for (var v = 1; v < k; v++){
+        merkle_root[v] = SHA256_2();
+        merkle_root[v].a <== merkle_root[v-1].out + path_bits[v]* (path[v] - merkle_root[v-1].out);
+        merkle_root[v].b <== path[v] + path_bits[v]* (merkle_root[v-1].out - path[v]);
+
     }
 
-    // 如果 position 是奇数，则再和 leaf 做一次 hash
-    pathHash = (position[0] == 1) ? hashFunc(pathHash, leaf) : pathHash;
-  }
+    // 输出计算完成的Merkle tree root
+    out <== merkle_root[k-1].out;
 
-  // 计算新树的根哈希
-  newRoot = computeNewRoot(merklePath(oldRoot, 0, leaf, newData), newLeafHash());
 }
 
-// 导出电路
-generateVerifier("mTreeUpdateVerifier", main);
+
+component main {public [root,leaf]} = verifyMerklePath(3);
