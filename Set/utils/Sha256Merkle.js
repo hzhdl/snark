@@ -100,20 +100,15 @@ class MerkleTree{
         let s=""
         let flag=true
         for (let i = 0; i <path.length; i++) {
-            flag=true
             s=""
-            for (let j = 0; j < path[i].length; ) {
-                if(j===pathindex[j]&&flag){
-                    s=s+pdata
-                    flag=false
-                }else {
-                    s=s+path[i][j]
-                    j++
-                }
+            path[i].splice(pathindex[i],0,pdata)
+            for (let j = 0; j < path[i].length; j++) {
+                s=s+path[i][j]
             }
+            // console.log(s)
             pdata=Sha256(s)
-            console.log(pdata)
         }
+        // console.log("root: ",pdata)
         return pdata===this.getroot()
     }
 
